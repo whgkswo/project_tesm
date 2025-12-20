@@ -3,8 +3,8 @@ package com.whgkswo.tesm.audio.bgm.loader;
 import com.whgkswo.tesm.Tesm;
 import com.whgkswo.tesm.audio.bgm.manager.BackgroundMusicManager;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.resource.ResourceManager;
+import net.minecraft.util.Identifier;
 
 public class MusicReloader implements SimpleSynchronousResourceReloadListener {
     private final BackgroundMusicManager manager;
@@ -15,14 +15,14 @@ public class MusicReloader implements SimpleSynchronousResourceReloadListener {
 
 
     @Override
-    public ResourceLocation getFabricId() {
-        return new ResourceLocation(Tesm.MOD_ID, "music_reloader");
+    public Identifier getFabricId() {
+        return new Identifier(Tesm.MOD_ID, "music_reloader");
     }
 
     @Override
-    public void onResourceManagerReload(ResourceManager resourceManager) {
+    public void reload(ResourceManager resourceManager) {
         manager.onResourceReloadStart();
-        manager.getMusicContainer().scanMusicFiles(resourceManager);
+        manager.getMusicLibrary().scanMusicFiles(resourceManager);
         manager.onResourceReloadComplete();
     }
 }

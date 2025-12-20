@@ -1,6 +1,6 @@
 package com.whgkswo.tesm.audio.bgm.manager;
 
-import com.whgkswo.tesm.audio.bgm.loader.MusicContainer;
+import com.whgkswo.tesm.audio.bgm.loader.MusicLibrary;
 import com.whgkswo.tesm.audio.bgm.loader.MusicReloader;
 import com.whgkswo.tesm.audio.bgm.player.MusicPlayer;
 import com.whgkswo.tesm.audio.bgm.selector.MusicSelector;
@@ -8,10 +8,11 @@ import com.whgkswo.tesm.audio.core.gamestate.GameState;
 import lombok.Getter;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.PackType;
+import net.minecraft.resource.ResourceType;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.Identifier;
 
-import java.util.List;
+import java.util.Optional;
 
 public class BackgroundMusicManager {
 
@@ -21,9 +22,10 @@ public class BackgroundMusicManager {
     public static final int FAST_FADE_DURATION = 35;
 
     private boolean isResourceLoaded = false;
+    private MinecraftServer server;
 
     @Getter
-    private final MusicContainer musicContainer = new MusicContainer();
+    private final MusicLibrary musicLibrary = new MusicLibrary();
 
     private final MusicPlayer musicPlayer = new MusicPlayer();
     private final MusicSelector musicSelector = new MusicSelector();
@@ -38,7 +40,7 @@ public class BackgroundMusicManager {
     public static void initialize() {
         BackgroundMusicManager manager = getInstance();
 
-        ResourceManagerHelper.get(PackType.CLIENT_RESOURCES)
+        ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES)
                         .registerReloadListener(new MusicReloader(manager));
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> manager.tick());
@@ -68,7 +70,6 @@ public class BackgroundMusicManager {
                 && !prevState.equals(GameState.LOADING) // 메뉴 -> 로딩 갈 때만, 로딩 -> 인게임 갈때는 x
                 && !prevState.equals(newState)){
 
-            musicPlayer.clearQueue();
             stopTrack(FAST_FADE_DURATION, SHORT_INTERVAL);
         }
     }
@@ -87,22 +88,20 @@ public class BackgroundMusicManager {
     private void playNextTrack(){
         playingContext.resetTickCounter(NORMAL_INTERVAL);
 
-        if(musicPlayer.isQueueEmpty()){
-            String path = musicSelector.selectMusic(playingContext.getGameState());
+        String path = musicSelector.selectTrackList(playingContext.getGameState());
+        if(path == null) return;
 
-            List<ResourceLocation> trackList = musicContainer.getTrackList(path);
+        Optional<Identifier> track = musicLibrary.getNextTrack(path);
+        if(track.isEmpty()) return;
 
-            musicPlayer.addToQueue(trackList);
-        }
-
-        musicPlayer.playNext();
+        musicPlayer.play(track.get());
     }
 
     public void onResourceReloadStart(){
         isResourceLoaded = false;
 
         musicPlayer.stopMusic(0);
-        musicPlayer.clearQueue();
+        musicLibrary.clear();
     }
 
     public void onResourceReloadComplete(){

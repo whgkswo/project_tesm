@@ -3,7 +3,7 @@ package com.whgkswo.tesm.audio.bgm.player;
 import com.whgkswo.tesm.audio.bgm.player.transition.TransitionData;
 import lombok.Getter;
 import lombok.Setter;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Identifier;
 
 
 public class PlayingMusicData {
@@ -16,9 +16,9 @@ public class PlayingMusicData {
     private int bufferId = -1;
     @Getter
     @Setter
-    private ResourceLocation musicLocation;
+    private Identifier musicLocation;
 
-    public PlayingMusicData(int sourceId, int bufferId, ResourceLocation musicLocation){
+    public PlayingMusicData(int sourceId, int bufferId, Identifier musicLocation){
         this.sourceId = sourceId;
         this.bufferId = bufferId;
         this.musicLocation = musicLocation;

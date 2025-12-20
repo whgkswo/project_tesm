@@ -2,13 +2,12 @@ package com.whgkswo.tesm.audio.bgm.player;
 
 import com.whgkswo.tesm.audio.bgm.player.transition.TransitionState;
 import com.whgkswo.tesm.audio.core.AudioHelper;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.Options;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.sounds.SoundSource;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.option.GameOptions;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.util.Identifier;
 import org.lwjgl.openal.AL10;
 
-import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 public class MusicPlayer {
@@ -16,16 +15,10 @@ public class MusicPlayer {
     private PlayingMusicData currentMusic;
     private CompletableFuture<?> loadingFuture;
 
-    private Queue<ResourceLocation> musicQueue = new LinkedList<>();
 
-    public void playNext(){
-        if(musicQueue.isEmpty()) return;
+    public void play(Identifier track){
 
-        ResourceLocation location = musicQueue.poll();
-
-        //currentMusic = AudioHelper.playMusic(location, getBaseVolume());
-
-        loadingFuture = AudioHelper.playMusicAsync(location, getBaseVolume())
+        loadingFuture = AudioHelper.playMusicAsync(track, getBaseVolume())
                 .thenAccept(musicData -> {
                     currentMusic = musicData;
                     loadingFuture = null;
@@ -59,30 +52,16 @@ public class MusicPlayer {
         }
     }
 
-    public boolean isQueueEmpty(){
-        return musicQueue.isEmpty();
-    }
-
-    public void addToQueue(List<ResourceLocation> locations){
-        List<ResourceLocation> shuffled = new ArrayList<>(locations);
-        Collections.shuffle(shuffled);
-        musicQueue.addAll(shuffled);
-    }
-
-    public void clearQueue(){
-        musicQueue.clear();
-    }
-
     public boolean isMusicPlaying(){
         return currentMusic != null;
     }
     
     private float getBaseVolume(){
-        Minecraft client = Minecraft.getInstance();
-        Options options = client.options;
+        MinecraftClient client = MinecraftClient.getInstance();
+        GameOptions options = client.options;
         
-        float musicVolume = options.getSoundSourceVolume(SoundSource.MUSIC);
-        float masterVolume = options.getSoundSourceVolume(SoundSource.MASTER);
+        float musicVolume = options.getSoundVolume(SoundCategory.MUSIC);
+        float masterVolume = options.getSoundVolume(SoundCategory.MASTER);
         
         return musicVolume * masterVolume;
     }

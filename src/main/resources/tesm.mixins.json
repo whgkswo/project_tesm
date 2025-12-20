@@ -3,7 +3,6 @@
 	"package": "com.whgkswo.tesm.mixin",
 	"compatibilityLevel": "JAVA_17",
 	"mixins": [
-		"ExampleMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

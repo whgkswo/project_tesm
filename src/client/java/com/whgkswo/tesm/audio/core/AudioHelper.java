@@ -1,10 +1,10 @@
 package com.whgkswo.tesm.audio.core;
 
 import com.whgkswo.tesm.audio.bgm.player.PlayingMusicData;
-import net.minecraft.client.Minecraft;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.resources.Resource;
-import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.resource.Resource;
+import net.minecraft.resource.ResourceManager;
+import net.minecraft.util.Identifier;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.openal.AL10;
 import org.lwjgl.stb.STBVorbis;
@@ -61,11 +61,11 @@ public class AudioHelper {
         return sourceId;
     }
 
-    public static PlayingMusicData playMusic(ResourceLocation location, float volume){
+    public static PlayingMusicData playMusic(Identifier location, float volume){
         try{
-            ResourceManager resourceManager = Minecraft.getInstance().getResourceManager();
+            ResourceManager resourceManager = MinecraftClient.getInstance().getResourceManager();
             Resource resource = resourceManager.getResource(location).orElseThrow(() -> new RuntimeException("음악파일 로드 실패: " + location));
-            InputStream stream = resource.open();
+            InputStream stream = resource.getInputStream();
 
             AudioData audioData = loadOgg(stream);
             stream.close();
@@ -83,12 +83,12 @@ public class AudioHelper {
     }
 
     // ogg 디코딩이 무거워서 비동기로 전환
-    public static CompletableFuture<PlayingMusicData> playMusicAsync(ResourceLocation location, float volume) {
+    public static CompletableFuture<PlayingMusicData> playMusicAsync(Identifier location, float volume) {
         return CompletableFuture.supplyAsync(() -> {
             try {
-                ResourceManager resourceManager = Minecraft.getInstance().getResourceManager();
+                ResourceManager resourceManager = MinecraftClient.getInstance().getResourceManager();
                 Resource resource = resourceManager.getResource(location).orElseThrow(() -> new RuntimeException("음악파일 로드 실패: " + location));
-                InputStream stream = resource.open();
+                InputStream stream = resource.getInputStream();
 
                 AudioData audioData = loadOgg(stream);
                 stream.close();
@@ -106,7 +106,7 @@ public class AudioHelper {
 
             return new PlayingMusicData(sourceId, bufferId, location);
 
-        }, runnable -> Minecraft.getInstance().execute(runnable));
+        }, runnable -> MinecraftClient.getInstance().execute(runnable));
     }
 
     public static void stopMusic(PlayingMusicData musicData){
